@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Medicate - Your Health Companion{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% load static %}
+    
+    <!-- Modern Navigation -->
+    <nav class="navbar">
+        <a href="{% url 'home' %}" class="logo">🏥 Medicate</a>
+        <ul class="nav-links">
+            <li><a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
+            <li><a href="{% url 'home' %}#about">About</a></li>
+            <li><a href="{% url 'contact' %}">Contact</a></li>
+            
+            {% if user.is_authenticated %}
+                {% if user.user_type == 'patient' %}
+                    <li><a href="{% url 'prediction:check_symptoms' %}">Check Symptoms</a></li>
+                    <li><a href="{% url 'consultation:doctor_list' %}">Find Doctors</a></li>
+                {% endif %}
+                <li class="user-greeting">👋 Hello, {{ user.first_name }}!</li>
+                <li><a href="{% if user.user_type == 'patient' %}{% url 'accounts:patient_profile' user.username %}{% else %}{% url 'accounts:doctor_profile' user.username %}{% endif %}">Profile</a></li>
+                <li><a href="{% url 'accounts:logout' %}" class="btn btn-danger">Log out</a></li>
+            {% else %}
+                <li><a href="{% url 'accounts:signup' %}">Signup</a></li>
+                <li><a href="{% url 'accounts:signin' %}" class="btn btn-primary">Login</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container" style="margin-top: 1rem;">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Modern Footer -->
+    <footer>
+        <div class="container">
+            <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600;">🏥 Medicate</p>
+            <p style="opacity: 0.8; margin-bottom: 1rem;">Your trusted healthcare companion</p>
+            <p style="opacity: 0.7; font-size: 0.9rem;">&copy; 2024 Medicate. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

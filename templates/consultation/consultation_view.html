@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Consultation - {{ consultation.id }}{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 3rem;">
+    <div class="grid-2">
+        <!-- Consultation Details -->
+        <div class="card">
+            <div class="card-header" style="margin: -2rem -2rem 2rem -2rem;">
+                <h2 style="margin: 0;">📋 Consultation Summary</h2>
+            </div>
+
+            <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
+                <p><strong style="color: var(--dark-text);">👤 Patient:</strong> <span style="color: var(--light-text);">{{ consultation.patient.user.get_full_name }}</span></p>
+                <p><strong style="color: var(--dark-text);">👨‍⚕️ Doctor:</strong> <span style="color: var(--primary-color); font-weight: 600;">Dr. {{ consultation.doctor.user.get_full_name }}</span></p>
+                <p>
+                    <strong style="color: var(--dark-text);">Status:</strong>
+                    <span class="badge badge-{{ consultation.status }}" style="margin-left: 0.5rem;">{{ consultation.status|title }}</span>
+                </p>
+                <p><strong style="color: var(--dark-text);">📅 Date:</strong> <span style="color: var(--light-text);">{{ consultation.consultation_date|date:"F d, Y H:i" }}</span></p>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem;">
+                {% if is_patient and can_rate %}
+                    <a href="{% url 'consultation:rate_doctor' consultation.id %}" class="btn btn-primary">Give Feedback</a>
+                {% endif %}
+
+                {% if is_doctor and consultation.status != 'closed' %}
+                    <button onclick="closeConsultation()" class="btn btn-danger">Close Consultation</button>
+                {% endif %}
+            </div>
+            
+            <div class="result-box" style="margin-top: 2rem;">
+                <h3>Predicted disease: 
+                    {% if consultation.prediction %}
+                        {{ consultation.prediction.predicted_disease.name }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </h3>
+                
+                {% if prediction_symptoms %}
+                    <strong>List of symptoms:</strong>
+                    <ul>
+                        {% for symptom in prediction_symptoms %}
+                            <li>{{ symptom }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                
+                {% if consultation.prediction %}
+                <div style="margin-top: 1rem;">
+                    <strong>confident score - {{ consultation.prediction.confidence_score }}%</strong>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: {{ consultation.prediction.confidence_score }}%; ">
+                            {{ consultation.prediction.confidence_score }}%
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <p style="margin-top: 1rem;"><strong>Patient age:</strong> {{ consultation.prediction.patient_age }}</p>
+                <p><strong>Consultation date:</strong> {{ consultation.consultation_date|date:"F d, Y" }}</p>
+            </div>
+        </div>
+        
+        <!-- Chat Box -->
+        <div class="chat-container">
+            <div class="chat-header">
+                💬 Chat with {% if is_patient %}Dr. {{ consultation.doctor.user.get_full_name }}{% else %}{{ consultation.patient.user.get_full_name }}{% endif %}
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                {% for msg in messages %}
+                    <div class="message {% if msg.sender == user %}sent{% else %}received{% endif %}">
+                        <small>{{ msg.sender.get_full_name }} - {{ msg.created_at|date:"M d, H:i" }}</small>
+                        <p>{{ msg.message }}</p>
+                    </div>
+                {% empty %}
+                    <p style="text-align: center; color: var(--light-text); margin-top: 2rem;">No messages yet!</p>
+                {% endfor %}
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Type a message">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    fetch('{% url "consultation:send_message_ajax" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            consultation_id: {{ consultation.id }},
+            message: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.error) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageHTML = `
+                <div class="message sent">
+                    <small>You - ${data.created_at}</small>
+                    <p>${data.message}</p>
+                </div>
+            `;
+            messagesDiv.innerHTML += messageHTML;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            input.value = '';
+        }
+    });
+}
+
+function closeConsultation() {
+    if (confirm('Are you sure you want to close this consultation?')) {
+        window.location.href = '{% url "consultation:close_consultation" consultation.id %}';
+    }
+}
+
+// Allow Enter key to send message
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+</script>
+{% endblock %}

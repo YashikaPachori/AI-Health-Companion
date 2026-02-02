@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Consultation History - Medicate{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 3rem; margin-bottom: 4rem;">
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">📋 Consultation History</h1>
+        <p style="color: var(--light-text); font-size: 1.1rem;">View all your past and current consultations</p>
+    </div>
+
+    {% if consultations %}
+        <div style="margin-top: 2rem;">
+            {% for c in consultations %}
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.25rem;">
+                                Consultation #{{ c.id }}
+                                {% if user.user_type == 'patient' and c.doctor %}
+                                    <span style="color: var(--light-text); font-size: 1rem; font-weight: 400;">with Dr. {{ c.doctor.user.get_full_name }}</span>
+                                {% elif user.user_type == 'doctor' and c.patient %}
+                                    <span style="color: var(--light-text); font-size: 1rem; font-weight: 400;">with {{ c.patient.user.get_full_name }}</span>
+                                {% endif %}
+                            </h3>
+                            <div style="display: grid; gap: 0.5rem;">
+                                <p><strong style="color: var(--dark-text);">📅 Date:</strong> <span style="color: var(--light-text);">{{ c.consultation_date|date:"F d, Y H:i" }}</span></p>
+                                <p>
+                                    <strong style="color: var(--dark-text);">Status:</strong>
+                                    <span class="badge badge-{{ c.status }}" style="margin-left: 0.5rem;">{{ c.status|title }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <a href="{% url 'consultation:consultation_view' c.id %}" class="btn btn-primary">👁️ View</a>
+                            {% if user.user_type == 'patient' and c.status == 'closed' and not c.rating %}
+                                <a href="{% url 'consultation:rate_doctor' c.id %}" class="btn btn-secondary">⭐ Give Feedback</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📭</div>
+            <h3 style="color: var(--light-text); margin-bottom: 1rem;">No consultations found</h3>
+            <p style="color: var(--light-text);">You don't have any consultations yet.</p>
+            {% if user.user_type == 'patient' %}
+                <a href="{% url 'consultation:doctor_list' %}" class="btn btn-primary" style="margin-top: 1.5rem;">Find a Doctor</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

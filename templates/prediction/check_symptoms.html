@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Check Symptoms{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 3rem;">
+    <h1 class="text-center">Identify possible conditions and treatment related to your symptoms.</h1>
+    
+    <div class="card" style="margin-top: 3rem;">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <button class="btn btn-primary" id="addSymptomsBtn">Add symptoms</button>
+            <button class="btn btn-info" id="addCustomSymptomBtn" onclick="showCustomSymptomForm()">+ Add Custom Symptom</button>
+        </div>
+        
+        <div id="customSymptomForm" style="display: none; margin-top: 2rem; padding: 1.5rem; background: #f5f5f5; border-radius: 8px;">
+            <h3>Suggest a New Symptom</h3>
+            <p style="color: var(--light-text); font-size: 0.9rem;">If your symptom is not in the list, you can suggest it to be added.</p>
+            <form id="customSymptomSubmitForm" style="margin-top: 1rem;">
+                <div class="form-group">
+                    <label>Symptom Name</label>
+                    <input type="text" id="customSymptomName" placeholder="e.g., Dizziness, Bloating, etc." required style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                </div>
+                <div class="form-group">
+                    <label>Description (optional)</label>
+                    <textarea id="customSymptomDesc" placeholder="Describe this symptom..." style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; min-height: 80px; font-family: inherit;"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" class="btn btn-success" onclick="submitCustomSymptom()">Submit Symptom</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideCustomSymptomForm()">Cancel</button>
+                </div>
+                <div id="customSymptomMessage" style="margin-top: 1rem;"></div>
+            </form>
+        </div>
+        
+        <div id="symptomSelector" style="display: none; margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Symptoms list</h3>
+                <input type="text" id="symptomSearch" placeholder="Search symptoms..." 
+                       style="padding: 0.5rem 1rem; border: 2px solid #e0e0e0; border-radius: 8px; width: 300px; font-size: 0.9rem;">
+            </div>
+            <div class="symptom-list" id="symptomListContainer">
+                {% for symptom in symptoms %}
+                    <label class="symptom-item" data-symptom-name="{{ symptom.name|lower }}">
+                        <input type="checkbox" name="symptoms" value="{{ symptom.name }}" class="symptom-checkbox">
+                        <div style="flex: 1;">
+                            <span style="font-weight: 600;">{{ symptom.name }}</span>
+                            {% if symptom.description %}
+                                <p style="font-size: 0.85rem; color: var(--light-text); margin-top: 0.25rem; margin-bottom: 0;">
+                                    {{ symptom.description|truncatewords:15 }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </label>
+                {% empty %}
+                    <p style="text-align: center; color: var(--light-text); padding: 2rem;">
+                        No symptoms available. Please contact administrator to add symptoms.
+                    </p>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 1rem; padding: 0.75rem; background: #e3f2fd; border-radius: 8px; font-size: 0.9rem; color: #1976d2;">
+                <strong>Selected:</strong> <span id="selectedCount">0</span> symptom(s)
+            </div>
+        </div>
+        
+        <button class="btn btn-success" id="predictBtn" style="margin-top: 2rem; display: none;">Predict</button>
+    </div>
+    
+    <div id="resultContainer" style="display: none; margin-top: 3rem;">
+        <!-- Results will be shown here -->
+    </div>
+</div>
+
+<script>
+// Custom Symptom Functions
+function showCustomSymptomForm() {
+    document.getElementById('customSymptomForm').style.display = 'block';
+    document.getElementById('customSymptomName').focus();
+}
+
+function hideCustomSymptomForm() {
+    document.getElementById('customSymptomForm').style.display = 'none';
+    document.getElementById('customSymptomName').value = '';
+    document.getElementById('customSymptomDesc').value = '';
+    document.getElementById('customSymptomMessage').innerHTML = '';
+}
+
+function submitCustomSymptom() {
+    const symptomName = document.getElementById('customSymptomName').value.trim();
+    const symptomDesc = document.getElementById('customSymptomDesc').value.trim();
+    const messageDiv = document.getElementById('customSymptomMessage');
+    
+    if (!symptomName) {
+        messageDiv.innerHTML = '<div style="color: #dc3545; padding: 0.5rem; background: #f8d7da; border-radius: 4px;">Please enter a symptom name.</div>';
+        return;
+    }
+    
+    messageDiv.innerHTML = '<div style="color: #0c5460; padding: 0.5rem; background: #d1ecf1; border-radius: 4px;">Submitting...</div>';
+    
+    fetch('{% url "prediction:add_custom_symptom" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            symptom_name: symptomName,
+            symptom_description: symptomDesc
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            messageDiv.innerHTML = '<div style="color: #155724; padding: 0.5rem; background: #d4edda; border-radius: 4px;">✅ Thank you! Your symptom suggestion has been submitted and will be reviewed by administrators.</div>';
+            document.getElementById('customSymptomName').value = '';
+            document.getElementById('customSymptomDesc').value = '';
+            setTimeout(() => {
+                hideCustomSymptomForm();
+            }, 2000);
+        } else {
+            messageDiv.innerHTML = '<div style="color: #dc3545; padding: 0.5rem; background: #f8d7da; border-radius: 4px;">' + (data.message || 'Error submitting symptom') + '</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        messageDiv.innerHTML = '<div style="color: #dc3545; padding: 0.5rem; background: #f8d7da; border-radius: 4px;">Error submitting symptom. Please try again.</div>';
+    });
+}
+
+// Symptom search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('symptomSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const symptomItems = document.querySelectorAll('.symptom-item');
+            
+            symptomItems.forEach(item => {
+                const symptomName = item.getAttribute('data-symptom-name') || '';
+                if (symptomName.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // Update selected count
+    const checkboxes = document.querySelectorAll('.symptom-checkbox');
+    const selectedCountEl = document.getElementById('selectedCount');
+    
+    function updateSelectedCount() {
+        if (selectedCountEl) {
+            const count = document.querySelectorAll('.symptom-checkbox:checked').length;
+            selectedCountEl.textContent = count;
+        }
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+});
+
+document.getElementById('addSymptomsBtn').addEventListener('click', function() {
+    document.getElementById('symptomSelector').style.display = 'block';
+    document.getElementById('predictBtn').style.display = 'block';
+    // Update count when opening
+    const count = document.querySelectorAll('.symptom-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = count;
+});
+
+document.getElementById('predictBtn').addEventListener('click', function() {
+    const selectedSymptoms = Array.from(document.querySelectorAll('.symptom-checkbox:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedSymptoms.length === 0) {
+        alert('Please select at least one symptom');
+        return;
+    }
+    
+    // Show loading state
+    const predictBtn = document.getElementById('predictBtn');
+    const originalText = predictBtn.textContent;
+    predictBtn.disabled = true;
+    predictBtn.textContent = 'Predicting...';
+    
+    fetch('{% url "prediction:predict_disease" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ symptoms: selectedSymptoms })
+    })
+    .then(response => response.json())
+    .then(data => {
+        predictBtn.disabled = false;
+        predictBtn.textContent = originalText;
+        
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        showResults(data);
+    })
+    .catch(error => {
+        predictBtn.disabled = false;
+        predictBtn.textContent = originalText;
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+});
+
+function showResults(data) {
+    const resultContainer = document.getElementById('resultContainer');
+    const recommendations = data.recommendations;
+    
+    let html = `
+        <div class="result-box">
+            <h2>Patient: ${data.patient_name || 'N/A'} | Age: ${data.patient_age || 'N/A'}</h2>
+            <h3 style="margin-top: 1rem;">Predicted Disease: <span style="color: var(--accent-color); font-size: 1.3em;">${data.disease_name || 'Unknown'}</span></h3>
+            
+            <div style="margin: 1.5rem 0;">
+                <strong>Confidence Score:</strong>
+                <div class="confidence-bar" style="margin-top: 0.5rem;">
+                    <div class="confidence-fill" style="width: ${data.confidence || 0}%;">
+                        ${data.confidence || 0}%
+                    </div>
+                </div>
+    `;
+    
+    // Insert a small inline hint for very low-confidence predictions
+    if (data && data.confidence !== undefined && parseFloat(data.confidence) < 20) {
+        html += `
+            <div style="margin-top:0.75rem; padding:0.75rem; background:#fff3cd; border-left:4px solid #ffc107; border-radius:4px; color:#856404;">
+                <strong>Low confidence prediction:</strong> This result is based on limited information (${data.confidence}% confidence). Consider adding more symptoms or consulting a doctor for an accurate diagnosis.
+            </div>
+        `;
+    }
+    
+    html += `
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                <p><strong>Severity:</strong> <span class="badge badge-${data.severity || 'moderate'}">${(data.severity || 'moderate').toUpperCase()}</span></p>
+                <p><strong>Recommended Specialist:</strong> <span style="color: var(--primary-color); font-weight: 600;">${data.specialist || 'General Physician'}</span></p>
+            </div>
+        </div>
+        
+        <p style="text-align: center; font-size: 1.1rem; margin: 2rem 0; padding: 1rem; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+            <strong>⚠️ Disclaimer:</strong> This tool does not provide medical advice. It is intended for informational purposes only.<br>
+            It is not a substitute for professional medical advice, diagnosis or treatment.
+        </p>
+    `;
+
+    // Know more about the disease - FIXED URL
+    if (data.disease_id) {
+        html += `
+            <div class="card" style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #667eea12 0%, #764ba212 100%); border: 2px solid var(--primary-color);">
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">📘 Know more about ${data.disease_name || 'this disease'}</h3>
+                <p style="color: var(--light-text); margin-bottom: 1rem; font-size: 0.95rem;">Learn what ${data.disease_name || 'it'} is, how it can be prevented, diet &amp; exercise tips, and when to see a doctor.</p>
+                <a href="/prediction/disease-info/${data.disease_id}/" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                    Read about ${data.disease_name || 'disease'} →
+                </a>
+            </div>
+        `;
+    }
+    
+    // Always show ALL recommendation sections for every prediction
+    html += `
+        <h2 style="text-align: center; margin: 3rem 0 2rem 0; color: var(--primary-color);">📋 Recommendations for Self-Care</h2>
+        <div class="recommendations">
+    `;
+    
+    // 1. Precautions - Always show
+    html += `
+        <div class="recommendation-card">
+            <h3>🛡️ Precautions</h3>
+    `;
+    if (recommendations && recommendations.precautions && recommendations.precautions.length > 0) {
+        html += `
+            <ul>
+                ${recommendations.precautions.map(p => `<li>${p}</li>`).join('')}
+            </ul>
+        `;
+    } else {
+        html += `
+            <p style="color: var(--light-text); font-style: italic;">Precautions information is being updated. Please consult with your healthcare provider for specific precautions.</p>
+        `;
+    }
+    html += `</div>`;
+    
+    // 2. Diet Recommendations - Always show
+    html += `
+        <div class="recommendation-card">
+            <h3>🥗 Diet Recommendations</h3>
+    `;
+    if (recommendations && recommendations.diet) {
+        const hasRecommended = recommendations.diet.recommended && recommendations.diet.recommended.length > 0;
+        const hasAvoid = recommendations.diet.avoid && recommendations.diet.avoid.length > 0;
+        
+        if (hasRecommended) {
+            html += `
+                <strong style="color: var(--success-color); display: block; margin-bottom: 0.5rem;">✅ Foods to eat:</strong>
+                <ul>
+                    ${recommendations.diet.recommended.map(d => `
+                        <li><strong>${d.food_item || 'N/A'}</strong>: ${d.description || 'No description available'}</li>
+                    `).join('')}
+                </ul>
+            `;
+        } else {
+            html += `
+                <p style="color: var(--light-text); font-style: italic; margin-bottom: 1rem;">Recommended foods information is being updated.</p>
+            `;
+        }
+        
+        if (hasAvoid) {
+            html += `
+                <strong style="color: var(--danger-color); margin-top: 1rem; display: block; margin-bottom: 0.5rem;">❌ Foods to avoid:</strong>
+                <ul>
+                    ${recommendations.diet.avoid.map(d => `
+                        <li><strong>${d.food_item || 'N/A'}</strong>: ${d.description || 'No description available'}</li>
+                    `).join('')}
+                </ul>
+            `;
+        } else {
+            html += `
+                <p style="color: var(--light-text); font-style: italic; margin-top: 1rem;">Foods to avoid information is being updated.</p>
+            `;
+        }
+    } else {
+        html += `
+            <p style="color: var(--light-text); font-style: italic;">Diet recommendations are being updated. Please consult with your healthcare provider for personalized diet advice.</p>
+        `;
+    }
+    html += `</div>`;
+    
+    // 3. Exercise Recommendations - Always show
+    html += `
+        <div class="recommendation-card">
+            <h3>🏃 Exercise Recommendations</h3>
+    `;
+    if (recommendations && recommendations.exercises && recommendations.exercises.length > 0) {
+        html += `
+            <ul>
+                ${recommendations.exercises.map(e => `
+                    <li style="margin-bottom: 1rem;">
+                        <strong>${e.exercise_name || 'Exercise'}</strong> <span style="color: var(--primary-color);">(${e.intensity || 'Moderate'})</span><br>
+                        ${e.description || 'No description available'}<br>
+                        <em style="color: var(--light-text);">Duration: ${e.duration || 'As recommended'}</em>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+    } else {
+        html += `
+            <p style="color: var(--light-text); font-style: italic;">Exercise recommendations are being updated. Please consult with your healthcare provider for appropriate exercise routines.</p>
+        `;
+    }
+    html += `</div>`;
+    
+    html += `</div>`; // Close recommendations div
+    
+    // 4. Top 5 Medicine Recommendations - Always show as separate section
+    html += `
+        <div class="card" style="margin-top: 2rem;">
+            <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 1rem;">💊 Top 5 Medicine Recommendations</h2>
+            <p style="color: var(--danger-color); margin-bottom: 1rem;">
+                <strong>⚠️ Disclaimer:</strong> Please consult with a healthcare provider before taking any medication.
+            </p>
+    `;
+    
+    if (recommendations && recommendations.medicines && recommendations.medicines.length > 0) {
+        html += `
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Medicine Name</th>
+                            <th>Generic Name</th>
+                            <th>Dosage</th>
+                            <th>Description</th>
+                            <th>Side Effects</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recommendations.medicines.map((m, i) => `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td><strong>${m.medicine_name}</strong></td>
+                                <td>${m.generic_name}</td>
+                                <td>${m.dosage}</td>
+                                <td>${m.description}</td>
+                                <td style="color: var(--danger-color); font-size: 0.9rem;">${m.side_effects}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        html += `
+            <div style="text-align: center; padding: 2rem;">
+                <p style="color: var(--light-text); font-style: italic; margin-bottom: 1rem;">
+                    Medicine recommendations are being updated. Please consult with your healthcare provider before taking any medication.
+                </p>
+                <p style="color: var(--danger-color); font-weight: 600;">
+                    ⚠️ Never self-medicate. Always consult a qualified healthcare professional.
+                </p>
+            </div>
+        `;
+    }
+    
+    html += `</div>`; // Close medicine card
+    
+    // Call-to-action buttons
+    html += `
+        <div style="text-align: center; margin: 3rem 0;">
+            <h2 style="color: var(--primary-color); margin-bottom: 2rem;">Choose Your Next Step:</h2>
+
+            <!-- Quick disease info and View result - FIXED URL -->
+            <div style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; align-items: center;">
+    `;
+    
+    if (data.disease_id) {
+        html += `
+                <a href="/prediction/disease-info/${data.disease_id}/" class="btn btn-outline" style="margin-right: .25rem; text-decoration: none;">📘 Know more: what it is &amp; how to prevent</a>
+        `;
+    }
+    
+    html += `
+                <button onclick="window.print()" class="btn btn-success">🖨️ Print Recommendations</button>
+            </div>
+
+            <!-- Self-Care Option -->
+            <div class="card" style="margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <h3 style="color: var(--success-color); margin-bottom: 1rem;">✅ Follow Self-Care Recommendations</h3>
+                <p style="color: var(--light-text); margin-bottom: 1.5rem;">Follow the precautions, diet, exercise and medicine recommendations provided above</p>
+            </div>
+            
+            <!-- Doctor Consultation Options -->
+            <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 2rem; border-radius: 15px; margin-top: 2rem;">
+                <h3 style="color: var(--primary-color); margin-bottom: 1.5rem;">👨‍⚕️ Consult with a Doctor</h3>
+                <p style="color: var(--light-text); margin-bottom: 2rem;">
+                    Based on your symptoms, we recommend consulting with a healthcare professional.
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                    <!-- Option 1: Recommended Specialist -->
+                    <div class="card" style="border: 2px solid var(--accent-color); position: relative;">
+                        <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent-color); color: white; padding: 0.25rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                            RECOMMENDED
+                        </div>
+                        <h4 style="color: var(--primary-color); margin-top: 1rem; margin-bottom: 0.5rem;">1. Find ${data.specialist || 'Specialist'} Doctors</h4>
+                        <p style="color: var(--light-text); font-size: 0.9rem; margin-bottom: 1rem;">
+                            Connect with doctors specializing in ${data.specialist || 'your condition'}. 
+                            These doctors have expertise in treating conditions like ${data.disease_name || 'your symptoms'}.
+                        </p>
+                        <a href="{% url 'consultation:doctor_list' %}?specialization=${encodeURIComponent(data.specialist || 'General Physician')}" 
+                           class="btn btn-primary" style="width: 100%; text-decoration: none;">
+                            Find ${data.specialist || 'Specialist'} Doctors
+                        </a>
+                    </div>
+                    
+                    <!-- Option 2: All Available Doctors -->
+                    <div class="card" style="border: 2px solid var(--secondary-color);">
+                        <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">2. Browse All Available Doctors</h4>
+                        <p style="color: var(--light-text); font-size: 0.9rem; margin-bottom: 1rem;">
+                            View all available doctors on our platform. You can filter by specialization, 
+                            ratings, or experience to find the right doctor for you.
+                        </p>
+                        <a href="{% url 'consultation:doctor_list' %}" 
+                           class="btn btn-secondary" style="width: 100%; text-decoration: none;">
+                            View All Doctors
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; padding: 1rem; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                    <p style="margin: 0; color: #1976d2; font-size: 0.9rem;">
+                        <strong>💡 Tip:</strong> If no ${data.specialist || 'specialist'} doctors are available, 
+                        you can still consult with other doctors who may be able to help or refer you to the right specialist.
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    resultContainer.innerHTML = html;
+    resultContainer.style.display = 'block';
+    resultContainer.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

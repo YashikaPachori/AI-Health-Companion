@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up - Medicate{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin-top: 4rem; margin-bottom: 4rem;">
+    <div class="card" style="max-width: 700px; margin: 0 auto;">
+        <div class="card-header" style="text-align: center; font-size: 1.5rem;">
+            ✨ Create Your Account
+        </div>
+        
+        <div style="text-align: center; margin: 2rem 0 3rem;">
+            <p style="color: var(--light-text); font-size: 1.1rem;">Join Medicate and take control of your health</p>
+        </div>
+        
+        <div class="grid-2" style="margin-top: 2rem; gap: 2rem;">
+            <a href="{% url 'accounts:doctor_signup' %}" class="card text-center" style="text-decoration: none; padding: 3rem; border: 2px solid var(--border-color); transition: all 0.3s ease; display: block;">
+                <div style="font-size: 5rem; margin-bottom: 1.5rem;">👨‍⚕️</div>
+                <h3 style="margin-top: 1rem; margin-bottom: 1rem; color: var(--primary-color); font-size: 1.5rem;">Doctor</h3>
+                <p style="color: var(--light-text); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">Join as a healthcare provider and help patients online</p>
+                <div class="btn btn-primary" style="width: 100%;">Sign Up as Doctor</div>
+            </a>
+            
+            <a href="{% url 'accounts:patient_signup' %}" class="card text-center" style="text-decoration: none; padding: 3rem; border: 2px solid var(--border-color); transition: all 0.3s ease; display: block;">
+                <div style="font-size: 5rem; margin-bottom: 1.5rem;">👥</div>
+                <h3 style="margin-top: 1rem; margin-bottom: 1rem; color: var(--primary-color); font-size: 1.5rem;">Patient</h3>
+                <p style="color: var(--light-text); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">Sign up to check symptoms and consult with doctors</p>
+                <div class="btn btn-secondary" style="width: 100%;">Sign Up as Patient</div>
+            </a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+            <p style="color: var(--light-text);">Already have an account? <a href="{% url 'accounts:signin' %}" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign in here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

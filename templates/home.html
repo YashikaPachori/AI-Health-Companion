@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Modern Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>🏥 Medicate</h1>
+        <p style="font-size: 1.75rem; margin-bottom: 1.5rem; font-weight: 600; opacity: 0.95;">Your Health Companion</p>
+        <p style="max-width: 800px; margin: 0 auto 2.5rem;">Get instant AI-powered disease predictions based on your symptoms, receive personalized health recommendations, and consult qualified doctors online—all in one trusted platform.
+</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            {% if user.is_authenticated %}
+                {% if user.user_type == 'patient' %}
+                    <a href="{% url 'prediction:check_symptoms' %}" class="btn btn-primary">🚀 Start Checking Symptoms</a>
+                {% elif user.user_type == 'doctor' %}
+                    <a href="{% url 'accounts:doctor_profile' user.username %}" class="btn btn-primary">👨‍⚕️ Go to Dashboard</a>
+                {% else %}
+                    <a href="{% url 'accounts:signup' %}" class="btn btn-primary">✨ Get Started</a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary">✨ Get Started</a>
+                <a href="{% url 'accounts:signin' %}" class="btn btn-outline">🔐 Login</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<div class="container" style="margin-top: 4rem; margin-bottom: 4rem;">
+    <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Key Features</h2>
+    <div class="grid-3">
+        <div class="card text-center">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+            <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.5rem;">Check Symptoms</h3>
+            <p style="color: var(--light-text); line-height: 1.8;">Enter your symptoms and get instant AI-powered disease predictions with confidence scores. Our intelligent system analyzes your symptoms to provide accurate insights.</p>
+        </div>
+        <div class="card text-center">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">💊</div>
+            <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.5rem;">Get Recommendations</h3>
+            <p style="color: var(--light-text); line-height: 1.8;">Receive personalized precautions, diet plans, exercises, and top medicine suggestions tailored to your specific condition and needs.</p>
+        </div>
+        <div class="card text-center">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">👨‍⚕️</div>
+            <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.5rem;">Consult Doctors</h3>
+            <p style="color: var(--light-text); line-height: 1.8;">Book appointments and chat with qualified doctors for professional medical advice. Connect with specialists who can help you.</p>
+        </div>
+    </div>
+</div>
+
+<!-- About Section -->
+<section id="about" class="about-section">
+    <div class="container">
+        <div class="card about-card">
+            <div class="about-grid">
+                <div class="about-intro">
+                    <h2>About Medicate</h2>
+                    <p>Medicate is an AI-assisted disease prediction and online consultation platform designed to help users get instant guidance based on symptoms and connect with qualified professionals when needed.</p>
+
+                    <div class="about-options">
+                        <h4>🏥 How Our System Helps You</h4>
+                        <div class="options-list">
+                            <div class="option">
+                                <strong>Option 1: Get Instant Health Guidance</strong>
+                                <ol>
+                                    <li>Enter your symptoms</li>
+                                    <li>Receive possible disease prediction</li>
+                                    <li>Get precautions, diet, exercise, and medicine recommendations</li>
+                                </ol>
+                            </div>
+                            <div class="option">
+                                <strong>Option 2: Consult a Doctor</strong>
+                                <ol>
+                                    <li>Book an appointment with a doctor</li>
+                                    <li>Chat with a doctor online</li>
+                                    <li>Get professional medical advice</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="about-details">
+                    <h4>🎯 Mission</h4>
+                    <ul>
+                        <li>To provide early healthcare guidance and improve health awareness using technology.</li>
+                        <li>To help users make informed and timely medical decisions.</li>
+                        <li>To bridge the gap between patients and doctors through an online platform.</li>
+                    </ul>
+
+                    <h4>🎯 Goals</h4>
+                    <ul>
+                        <li>Enable users to predict possible diseases based on symptoms.</li>
+                        <li>Provide clear and helpful health recommendations such as precautions, diet, exercise, and medicine guidance.</li>
+                        <li>Allow users to consult doctors or book appointments when needed.</li>
+                        <li>Promote responsible healthcare behavior by encouraging professional consultation in serious cases.</li>
+                    </ul>
+
+                    <h4>🌟 Benefits</h4>
+                    <ul>
+                        <li>Provides instant health guidance when doctors are not immediately available.</li>
+                        <li>Saves time by offering early symptom analysis.</li>
+                        <li>Helps users understand their condition before consulting a doctor.</li>
+                        <li>Reduces unnecessary hospital visits while encouraging timely consultation.</li>
+                        <li>Combines disease prediction and doctor consultation on one unified platform.</li>
+                    </ul>
+
+                    <div class="important-notice">
+                        <strong>⚠️ Important Notice</strong>
+                        <p>This system does not replace professional medical advice. In severe, emergency, or life-threatening situations, users are strongly advised to consult a qualified doctor or visit the nearest hospital immediately.</p>
+                    </div>
+
+                    
+                </aside>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

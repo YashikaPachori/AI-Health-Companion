@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ disease.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 2.5rem; margin-bottom: 3rem;">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 220px;">
+                <h1 style="margin-bottom: .5rem;">📘 {{ disease.name }}</h1>
+                <p style="color: var(--light-text); margin-bottom: .5rem;">Severity: <strong style="color: var(--primary-color);">{{ disease.severity_level|capfirst }}</strong></p>
+                <p style="color: var(--light-text);">Specialist: <strong style="color: var(--primary-color);">{{ disease.specialist_required }}</strong></p>
+            </div>
+            <div style="text-align: right; min-width: 200px;">
+                <a href="{% url 'prediction:check_symptoms' %}" class="btn btn-outline" style="margin-right: .5rem;">← Back</a>
+                <a href="{% url 'prediction:disease_result' %}" class="btn btn-primary">View Latest Result</a>
+            </div>
+        </div>
+
+        <hr style="margin: 1.25rem 0; border: none; border-top: 1px solid var(--border-color);">
+
+        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+            <div>
+                <section style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: .5rem;">What is {{ disease.name }}?</h3>
+                    <p style="color: var(--light-text); line-height: 1.7;">{{ disease.description }}</p>
+                </section>
+
+                <section style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: .5rem;">How can it be prevented?</h3>
+                    <p style="color: var(--light-text); margin-bottom: 1rem; line-height: 1.6;">Following these precautions can help prevent or manage {{ disease.name }}. Always consult a healthcare provider for personalized advice.</p>
+                    {% if recommendations.precautions and recommendations.precautions|length > 0 %}
+                        <ul style="color: var(--light-text); line-height: 1.8;">
+                            {% for p in recommendations.precautions %}
+                                <li>{{ p }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p style="color: var(--lighter-text);">Prevention and precaution information is not available for this condition. Please consult your doctor for guidance.</p>
+                    {% endif %}
+                </section>
+
+                <h4 style="margin-top: 1rem;">Diet Recommendations</h4>
+                {% if recommendations.diet %}
+                    {% if recommendations.diet.recommended or recommendations.diet.avoid %}
+                        {% if recommendations.diet.recommended and recommendations.diet.recommended|length > 0 %}
+                            <strong style="color: var(--success-color);">Foods to eat:</strong>
+                            <ul style="color: var(--light-text);">
+                            {% for item in recommendations.diet.recommended %}
+                                <li><strong>{{ item.food_item }}</strong> — {{ item.description }}</li>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
+                        {% if recommendations.diet.avoid and recommendations.diet.avoid|length > 0 %}
+                            <strong style="color: var(--danger-color);">Foods to avoid:</strong>
+                            <ul style="color: var(--light-text);">
+                            {% for item in recommendations.diet.avoid %}
+                                <li><strong>{{ item.food_item }}</strong> — {{ item.description }}</li>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% else %}
+                        <p style="color: var(--lighter-text);">Diet recommendations are not available.</p>
+                    {% endif %}
+                {% else %}
+                    <p style="color: var(--lighter-text);">Diet recommendations are not available.</p>
+                {% endif %}
+
+                <h4 style="margin-top: 1rem;">Exercise Recommendations</h4>
+                {% if recommendations.exercises and recommendations.exercises|length > 0 %}
+                    <ul style="color: var(--light-text);">
+                    {% for ex in recommendations.exercises %}
+                        <li>
+                            <strong>{{ ex.exercise_name }}</strong> — {{ ex.description }}
+                            <div style="color: var(--lighter-text); font-size: .95rem;">Intensity: {{ ex.intensity }} • Duration: {{ ex.duration }}</div>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="color: var(--lighter-text);">Exercise recommendations are not available.</p>
+                {% endif %}
+
+                <h4 style="margin-top: 1rem;">Top Medicine Recommendations</h4>
+                {% if recommendations.medicines and recommendations.medicines|length > 0 %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Medicine</th>
+                                    <th>Dosage</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in recommendations.medicines %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ m.medicine_name }}{% if m.generic_name %} <small>({{ m.generic_name }})</small>{% endif %}</td>
+                                        <td>{{ m.dosage }}</td>
+                                        <td style="color: var(--light-text);">{{ m.description }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="color: var(--lighter-text);">Medicine recommendations are not available.</p>
+                {% endif %}
+            </div>
+
+            <aside style="min-width: 220px;">
+                <div style="position: sticky; top: 90px;">
+                    <h4>Recommended Doctors</h4>
+                    {% if doctors and doctors|length > 0 %}
+                        <ul style="color: var(--light-text);">
+                        {% for d in doctors %}
+                            <li>
+                                <strong>{{ d.user.get_full_name }}</strong><br>
+                                <span style="color: var(--lighter-text);">{{ d.specialization }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                        <a href="{% url 'consultation:doctor_list' %}?specialization={{ disease.specialist_required|urlencode }}" class="btn btn-primary" style="display: block; margin-top: 1rem;">Find {{ disease.specialist_required }}s</a>
+                    {% else %}
+                        <p style="color: var(--lighter-text);">No recommended doctors available right now.</p>
+                        <a href="{% url 'consultation:doctor_list' %}" class="btn btn-outline" style="display: block; margin-top: 1rem;">Browse Doctors</a>
+                    {% endif %}
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+{% endblock %}

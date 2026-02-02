@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Sign In - Medicate{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin-top: 4rem; margin-bottom: 4rem;">
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header" style="text-align: center; font-size: 1.5rem;">
+            🔐 Sign In to Medicate
+        </div>
+        
+        <div style="text-align: center; margin: 2rem 0 3rem;">
+            <p style="color: var(--light-text); font-size: 1.1rem;">Choose your account type to continue</p>
+        </div>
+        
+        <div class="grid-3" style="margin-top: 2rem;">
+            <div class="card text-center" style="padding: 2.5rem; border: 2px solid var(--border-color); transition: all 0.3s ease;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">👨‍💼</div>
+                <h3 style="margin-top: 1rem; margin-bottom: 1rem; color: var(--primary-color);">Admin</h3>
+                <p style="color: var(--light-text); font-size: 0.9rem; margin-bottom: 1.5rem;">Access admin dashboard</p>
+                <a href="/admin/" class="btn btn-primary" style="width: 100%;">Login</a>
+            </div>
+            
+            <a href="{% url 'accounts:doctor_login' %}" class="card text-center" style="text-decoration: none; padding: 2.5rem; border: 2px solid var(--border-color); transition: all 0.3s ease; display: block;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">👨‍⚕️</div>
+                <h3 style="margin-top: 1rem; margin-bottom: 1rem; color: var(--primary-color);">Doctor</h3>
+                <p style="color: var(--light-text); font-size: 0.9rem; margin-bottom: 1.5rem;">Login as healthcare provider</p>
+                <div class="btn btn-secondary" style="width: 100%;">Login</div>
+            </a>
+            
+            <a href="{% url 'accounts:patient_login' %}" class="card text-center" style="text-decoration: none; padding: 2.5rem; border: 2px solid var(--border-color); transition: all 0.3s ease; display: block;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">👥</div>
+                <h3 style="margin-top: 1rem; margin-bottom: 1rem; color: var(--primary-color);">Patient</h3>
+                <p style="color: var(--light-text); font-size: 0.9rem; margin-bottom: 1.5rem;">Login as patient</p>
+                <div class="btn btn-secondary" style="width: 100%;">Login</div>
+            </a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+            <p style="color: var(--light-text);">Don't have an account? <a href="{% url 'accounts:signup' %}" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign up here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

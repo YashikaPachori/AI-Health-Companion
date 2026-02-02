@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Patient Login - Medicate{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 500px; margin-top: 4rem; margin-bottom: 4rem;">
+    <div class="card">
+        <div class="card-header" style="text-align: center; font-size: 1.5rem;">
+            👥 Patient Login
+        </div>
+        
+        <form method="post" style="margin-top: 2rem;">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>👤 Username</label>
+                {{ form.username }}
+            </div>
+            
+            <div class="form-group">
+                <label>🔒 Password</label>
+                {{ form.password }}
+            </div>
+            
+            {% if form.errors %}
+                <div class="alert alert-error" style="margin: 1rem 0;">
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">Login</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+            <p style="color: var(--light-text);">
+                Don't have an account? <a href="{% url 'accounts:patient_signup' %}" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign up here</a>
+            </p>
+            <p style="margin-top: 1rem;">
+                <a href="{% url 'accounts:signin' %}" style="color: var(--light-text); text-decoration: none; font-size: 0.9rem;">← Back to sign in options</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

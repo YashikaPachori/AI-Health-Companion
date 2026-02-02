@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Consultation History{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 3rem;">
+    <h1 class="text-center">Consultation History</h1>
+    
+    <div class="table-container" style="margin-top: 2rem;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient name</th>
+                    <th>Patient Email</th>
+                    <th>View Patient's profile</th>
+                    <th>Predicted Disease Name</th>
+                    <th>Consultation Date</th>
+                    <th>Consultation Status</th>
+                    <th>Resume Consultation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for consultation in consultations %}
+                <tr>
+                    <td>{{ consultation.patient.user.get_full_name }}</td>
+                    <td>{{ consultation.patient.user.email }}</td>
+                    <td>
+                        <a href="{% url 'accounts:patient_profile' consultation.patient.user.username %}" class="btn btn-primary">view profile</a>
+                    </td>
+                    <td>
+                        {% if consultation.prediction %}
+                            {{ consultation.prediction.predicted_disease.name }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ consultation.consultation_date|date:"F d, Y" }}</td>
+                    <td>
+                        <span class="badge badge-{{ consultation.status }}">{{ consultation.status }}</span>
+                    </td>
+                    <td>
+                        {% if consultation.status == 'closed' %}
+                            <a href="{% url 'consultation:resume_consultation' consultation.id %}" class="btn btn-secondary">Resume</a>
+                        {% else %}
+                            <a href="{% url 'consultation:consultation_view' consultation.id %}" class="btn btn-primary">Consult</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">No consultations yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

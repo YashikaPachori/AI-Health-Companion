@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Rate Doctor - Consultation {{ consultation.id }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 650px; margin-top: 3rem; margin-bottom: 4rem;">
+    <div class="card">
+        <div class="card-header" style="text-align: center; font-size: 1.5rem;">
+            ⭐ Rate Your Doctor
+        </div>
+
+        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+            <p style="margin: 0.5rem 0;"><strong style="color: var(--primary-color);">👨‍⚕️ Doctor:</strong> <span style="color: var(--dark-text);">Dr. {{ consultation.doctor.user.get_full_name }}</span></p>
+            <p style="margin: 0.5rem 0;"><strong style="color: var(--primary-color);">🆔 Consultation ID:</strong> <span style="color: var(--dark-text);">#{{ consultation.id }}</span></p>
+        </div>
+
+        <form method="post" style="margin-top: 2rem;">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>⭐ Rating (1-5 stars)</label>
+                {{ form.rating }}
+                <p style="font-size: 0.85rem; color: var(--light-text); margin-top: 0.5rem;">Please select a rating from 1 to 5 stars</p>
+            </div>
+
+            <div class="form-group">
+                <label>📝 Review (Optional)</label>
+                {{ form.review }}
+                <p style="font-size: 0.85rem; color: var(--light-text); margin-top: 0.5rem;">Share your experience with this doctor</p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <a href="{% url 'consultation:consultation_view' consultation.id %}" class="btn btn-outline" style="flex: 1;">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Submit Feedback</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

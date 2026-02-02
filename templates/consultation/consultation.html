@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Consult Dr. {{ doctor.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 3rem; max-width: 900px;">
+    <div class="grid-2">
+        <!-- Doctor summary -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Consultation Request</h2>
+            </div>
+            <div class="profile-info">
+                <h3 style="margin-bottom: 0.5rem;">Dr. {{ doctor.user.get_full_name }}</h3>
+                <p style="margin: 0.25rem 0;"><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+                <p style="margin: 0.25rem 0;"><strong>Experience:</strong> {{ doctor.experience_years }} years</p>
+                <p style="margin: 0.25rem 0;"><strong>Consultation fee:</strong> ₹{{ doctor.consultation_fee }}</p>
+                <p style="margin: 0.5rem 0;">
+                    <strong>Rating:</strong>
+                    ⭐ {{ doctor.rating }}/5.0
+                    <span style="color: var(--light-text);">({{ doctor.total_ratings }} reviews)</span>
+                </p>
+                <p style="margin-top: 1rem; color: var(--light-text);">
+                    You are about to start an online consultation with this doctor.
+                    Please describe your main problem clearly so the doctor can help you better.
+                </p>
+            </div>
+        </div>
+
+        <!-- Request form -->
+        <div class="card">
+            <h3 class="text-center">Describe your problem</h3>
+
+            <form method="post" style="margin-top: 1.5rem;">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    {{ form.chief_complaint.label_tag }}
+                    {{ form.chief_complaint }}
+                </div>
+
+                <p style="font-size: 0.9rem; color: var(--light-text); margin-top: -0.5rem;">
+                    Do not share passwords, bank details or any sensitive non-medical information.
+                </p>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                    <a href="{% url 'consultation:doctor_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Start Consultation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
